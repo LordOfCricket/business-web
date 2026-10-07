@@ -25,7 +25,19 @@ export async function proxyToGateway(request: NextRequest, pathSegments: string[
 
   if (!SAFE_METHODS.has(method)) {
     const origin = request.headers.get("origin");
-    if (!origin || origin !== new URL(serverEnv().NEXT_PUBLIC_SITE_URL).origin) {
+    const allowedOrigin = new URL(serverEnv().NEXT_PUBLIC_SITE_URL).origin;
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto") ?? "https";
+    const forwardedOrigin = forwardedHost ? `${forwardedProto}://${forwardedHost}` : null;
+    const requestOrigin = new URL(request.url).origin;
+
+    const matches =
+      Boolean(origin) &&
+      (origin === allowedOrigin ||
+        origin === requestOrigin ||
+        (forwardedOrigin !== null && origin === forwardedOrigin));
+
+    if (!matches) {
       return errorResponse(403, "FORBIDDEN", "Cross-site request blocked.");
     }
   }

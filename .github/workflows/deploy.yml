@@ -127,8 +127,8 @@ jobs:
         run: |
           # "|" separates the variables: LAUNCHED_SPORTS holds commas
           VARS="GATEWAY_URL=${{ steps.urls.outputs.gateway }}|GATEWAY_IAM_AUDIENCE=${{ steps.urls.outputs.gateway }}"
-          VARS="$VARS|NEXT_PUBLIC_SITE_URL=${{ steps.urls.outputs.self }}|CUSTOMER_SITE_URL=${{ steps.urls.outputs.customer }}"
-          VARS="$VARS|BUSINESS_SITE_URL=${{ steps.urls.outputs.business }}|ADMIN_SITE_URL=${{ steps.urls.outputs.admin }}|LAUNCHED_SPORTS=$LAUNCHED_SPORTS"
+          VARS="$VARS|NEXT_PUBLIC_SITE_URL=${{ vars.BUSINESS_SITE_URL || steps.urls.outputs.self }}|CUSTOMER_SITE_URL=${{ vars.CUSTOMER_SITE_URL || steps.urls.outputs.customer }}"
+          VARS="$VARS|BUSINESS_SITE_URL=${{ vars.BUSINESS_SITE_URL || steps.urls.outputs.business }}|ADMIN_SITE_URL=${{ vars.ADMIN_SITE_URL || steps.urls.outputs.admin }}|LAUNCHED_SPORTS=$LAUNCHED_SPORTS"
           # The key must equal the gateway's FRONTEND_PROXY_KEY, or every visitor shares the web server's rate limit.
           EXTRA_FLAGS=()
           if gcloud secrets describe frontend-proxy-key --project="$PROJECT_ID" >/dev/null 2>&1; then
