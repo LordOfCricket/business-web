@@ -1,0 +1,183 @@
+# business-web: checks on every push and pull request; a push to main also deploys it to Cloud Run.
+# The same file lives in each web app (customer-web, business-web, admin-web) with only SERVICE_NAME changed: one
+# repository each, deployed on its own, as the services deploy themselves.
+name: Deploy business-web to GCP Cloud Run
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID || 'test-sports-509906' }}
+  PROJECT_NUMBER: ${{ vars.GCP_PROJECT_NUMBER || '981116867868' }}
+  GAR_ZONE: ${{ vars.GCP_REGION || 'asia-south2' }}
+  GAR_REPO: ${{ vars.GAR_REPO || 'newsports' }}
+  SERVICE_NAME: business-web
+  # The services' runtime identity: it may call the private gateway, as the services call each other.
+  SERVICE_ACCOUNT: ${{ vars.SERVICE_ACCOUNT || '981116867868-compute@developer.gserviceaccount.com' }}
+  LAUNCHED_SPORTS: ${{ vars.LAUNCHED_SPORTS || 'cricket,karate' }}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  check:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  deploy:
+    name: Build & Deploy
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure GCP Project & APIs
+        run: |
+          gcloud config set project "$PROJECT_ID" --quiet
+          gcloud config set run/region "$GAR_ZONE" --quiet
+          gcloud config set run/platform managed --quiet
+          gcloud services enable run.googleapis.com artifactregistry.googleapis.com compute.googleapis.com --project="$PROJECT_ID" --quiet || true
+
+      - name: Ensure Artifact Registry Exists & Configure Docker
+        run: |
+          gcloud artifacts repositories describe "$GAR_REPO" --project="$PROJECT_ID" --location="$GAR_ZONE" --quiet 2>/dev/null || \
+          gcloud artifacts repositories create "$GAR_REPO" --project="$PROJECT_ID" --repository-format=docker --location="$GAR_ZONE" --description="NewSports Docker Repo" --quiet
+          gcloud auth configure-docker "$GAR_ZONE-docker.pkg.dev" --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push Docker Image
+        id: docker_build
+        run: |
+          IMAGE="$GAR_ZONE-docker.pkg.dev/$PROJECT_ID/$GAR_REPO/$SERVICE_NAME"
+          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" .
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+          echo "image=$IMAGE:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Discover the gateway and the sites' URLs
+        id: urls
+        run: |
+          GATEWAY_URL=$(gcloud run services describe gateway --project="$PROJECT_ID" --region="$GAR_ZONE" --format='value(status.url)' 2>/dev/null || true)
+          if [ -z "$GATEWAY_URL" ]; then
+            GATEWAY_URL=$(gcloud run services list --project="$PROJECT_ID" --region="$GAR_ZONE" --filter="metadata.name:gateway" --format='value(status.url)' 2>/dev/null || true)
+          fi
+          if [ -z "$GATEWAY_URL" ]; then
+            GATEWAY_URL="https://gateway-$PROJECT_NUMBER.$GAR_ZONE.run.app"
+          fi
+
+          # Cloud Run's deterministic URLs, falling back to computed if service isn't deployed yet
+          site() {
+            EXISTING=$(gcloud run services describe "$1" --project="$PROJECT_ID" --region="$GAR_ZONE" --format='value(status.url)' 2>/dev/null || true)
+            if [ -z "$EXISTING" ]; then
+              EXISTING=$(gcloud run services list --project="$PROJECT_ID" --region="$GAR_ZONE" --filter="metadata.name:$1" --format='value(status.url)' 2>/dev/null || true)
+            fi
+            if [ -n "$EXISTING" ]; then
+              echo "$EXISTING"
+            else
+              echo "https://$1-$PROJECT_NUMBER.$GAR_ZONE.run.app"
+            fi
+          }
+          {
+            echo "gateway=$GATEWAY_URL"
+            echo "self=$(site "$SERVICE_NAME")"
+            echo "customer=$(site customer-web)"
+            echo "business=$(site business-web)"
+            echo "admin=$(site admin-web)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Deploy to Cloud Run
+        env:
+          GITHUB_PROXY_KEY: ${{ secrets.FRONTEND_PROXY_KEY }}
+        run: |
+          # "|" separates the variables: LAUNCHED_SPORTS holds commas
+          VARS="GATEWAY_URL=${{ steps.urls.outputs.gateway }}|GATEWAY_IAM_AUDIENCE=${{ steps.urls.outputs.gateway }}"
+          VARS="$VARS|NEXT_PUBLIC_SITE_URL=${{ steps.urls.outputs.self }}|CUSTOMER_SITE_URL=${{ steps.urls.outputs.customer }}"
+          VARS="$VARS|BUSINESS_SITE_URL=${{ steps.urls.outputs.business }}|ADMIN_SITE_URL=${{ steps.urls.outputs.admin }}|LAUNCHED_SPORTS=$LAUNCHED_SPORTS"
+          # The key must equal the gateway's FRONTEND_PROXY_KEY, or every visitor shares the web server's rate limit.
+          EXTRA_FLAGS=()
+          if gcloud secrets describe frontend-proxy-key --project="$PROJECT_ID" >/dev/null 2>&1; then
+            EXTRA_FLAGS+=("--set-secrets=FRONTEND_PROXY_KEY=frontend-proxy-key:latest")
+          else
+            EXTRA_FLAGS+=("--clear-secrets")
+            if [ -n "$GITHUB_PROXY_KEY" ]; then
+              VARS="$VARS|FRONTEND_PROXY_KEY=$GITHUB_PROXY_KEY"
+            else
+              echo "::warning::No frontend-proxy-key secret: using the gateway's built-in default. Create the secret and give it to the gateway too."
+              VARS="$VARS|FRONTEND_PROXY_KEY=local-frontend-proxy-key"
+            fi
+          fi
+          gcloud run deploy "$SERVICE_NAME" \
+            --project="$PROJECT_ID" \
+            --image="${{ steps.docker_build.outputs.image }}" \
+            --region="$GAR_ZONE" \
+            --platform=managed \
+            --service-account="$SERVICE_ACCOUNT" \
+            --allow-unauthenticated \
+            --port=3000 \
+            --memory=512Mi \
+            --cpu=1 \
+            --min-instances=0 \
+            --max-instances=3 \
+            --timeout=60s \
+            --cpu-boost \
+            --set-env-vars="^|^$VARS" \
+            "${EXTRA_FLAGS[@]}" \
+            --quiet || {
+              echo "=== DEPLOYMENT FAILED! Reading Cloud Run logs ==="
+              gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=$SERVICE_NAME" --project="$PROJECT_ID" --order=desc --limit=40 --format="value(textPayload,jsonPayload.message)" || true
+              exit 1
+            }
+
+      - name: Health check
+        run: |
+          URL="${{ steps.urls.outputs.self }}"
+          TOKEN=$(gcloud auth print-identity-token)
+          for i in $(seq 1 10); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' "$URL/api/health" || true)
+            if [ "$CODE" = "200" ]; then echo "Service $URL is up and publicly reachable"; exit 0; fi
+            AUTH_CODE=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $TOKEN" "$URL/api/health" || true)
+            if [ "$AUTH_CODE" = "200" ]; then
+              echo "Service $URL is UP and healthy (authenticated). Public access (allUsers) is currently restricted by GCP Organization Policy (constraints/iam.allowedPolicyMemberDomains)."
+              exit 0
+            fi
+            sleep 6
+          done
+          echo "::error::$URL did not answer its health check"
+          gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=$SERVICE_NAME" --project="$PROJECT_ID" --order=desc --limit=40 --format="value(textPayload,jsonPayload.message)" || true
+          exit 1

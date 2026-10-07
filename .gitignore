@@ -1,0 +1,29 @@
+# secrets
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+*key*.json
+gcp-*.json
+*.credentials.json
+**/dev-keys/
+
+# build output
+target/
+node_modules/
+.next/
+out/
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

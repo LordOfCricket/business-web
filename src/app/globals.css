@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens (spec §47: minimal, premium, consistent). Natural and editorial: warm paper, deep ink, a pitch-green
+ * brand and a clay accent used sparingly. Display type is a serif (Fraunces); interface type is Inter.
+ */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --color-brand-50: #eef3ee;
+  --color-brand-100: #dbe7dc;
+  --color-brand-200: #b7cdb9;
+  --color-brand-500: #3f7a55;
+  --color-brand-600: #2d6043;
+  --color-brand-700: #224b34;
+  --color-brand-900: #13291d;
+
+  --color-clay: #b35d3a;
+
+  --color-ink: #1a1c19;
+  --color-muted: #676a61;
+  --color-line: #e2ddd0;
+  --color-surface: #fffdf8;
+  --color-canvas: #f5f2ea;
+  --color-paper: #f5f2ea;
+  --color-danger: #b42318;
+  --color-warning: #9a4a07;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    @apply bg-canvas text-ink antialiased;
+  }
+  body {
+    overflow-x: clip;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+  ::selection {
+    @apply bg-brand-200 text-brand-900;
+  }
+}
+
+@layer components {
+  /* Small uppercase label above a heading. */
+  .kicker {
+    @apply text-xs font-semibold tracking-[0.18em] text-muted uppercase;
+  }
+  /* Serif display heading used by editorial sections. */
+  .display {
+    @apply font-display font-normal tracking-tight text-balance;
+    font-variation-settings: "opsz" 144;
+  }
+  /* The one content width of the site. */
+  .container-site {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/*
+ * Motion is decoration, never information: everything below switches off for people who ask for reduced motion.
+ * Scroll reveals use CSS scroll-driven animations where the browser supports them and do nothing elsewhere.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal both var(--ease-out-soft);
+      animation-timeline: view();
+      animation-range: entry 0% entry 35%;
+    }
+  }
+
+  /* every shape is shorter than 2400 user units; dashed shapes keep their own pattern and are not drawn in */
+  .draw-lines :not(g, [stroke-dasharray]) {
+    stroke-dasharray: 2400;
+    stroke-dashoffset: 2400;
+    animation: draw 2.4s var(--ease-out-soft) 0.2s forwards;
+  }
+
+  .rise {
+    animation: rise 0.9s var(--ease-out-soft) both;
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
