@@ -1,0 +1,166 @@
+import type {
+  CoachingHistoryEntry,
+  StructuredCoachAchievement,
+  NotableAthlete,
+  CoachOffering,
+  CoachQualification,
+} from "./types";
+
+export const SAMPLE_COACHING_HISTORY: CoachingHistoryEntry[] = [
+  {
+    id: "hist-1",
+    academy: "ABC Sports & Martial Arts Academy",
+    branch: "South Mumbai Center",
+    position: "Assistant Technical Instructor",
+    sport: "Karate",
+    discipline: "Shotokan Basics & Kata",
+    startYear: "2016",
+    endYear: "2019",
+    isCurrent: false,
+    responsibilities: "Junior syllabus delivery, physical conditioning, belt syllabus compliance.",
+    achievements: "Trained 3 State Gold Medalists in Cadet Kata.",
+  },
+  {
+    id: "hist-2",
+    academy: "XYZ High Performance Sports Institute",
+    branch: "Bandra Elite Arena",
+    position: "Senior Kumite Coach",
+    sport: "Karate",
+    discipline: "WKF Competitive Kumite",
+    startYear: "2019",
+    endYear: "2023",
+    isCurrent: false,
+    responsibilities: "Competition tactical planning, video analysis, youth national squad training.",
+    achievements: "Led Maharashtra Youth Team to 2nd place overall at Nationals.",
+  },
+  {
+    id: "hist-3",
+    academy: "LordOfSportz Martial Arts Academy",
+    branch: "Main Dojo & High Performance Center",
+    position: "Head Coach & Technical Director",
+    sport: "Karate",
+    discipline: "Advanced Kata & Elite Kumite",
+    startYear: "2023",
+    endYear: "Present",
+    isCurrent: true,
+    responsibilities: "Head of coaching operations, master grading examiner, tournament coaching.",
+    achievements: "Over 240 active students coached, 8 national champions developed.",
+  },
+];
+
+export const SAMPLE_COACH_ACHIEVEMENTS: StructuredCoachAchievement[] = [
+  {
+    id: "ach-1",
+    title: "National Karate Championship - Best Coach Honor",
+    category: "COACHING_AWARD",
+    role: "COACH",
+    year: 2025,
+    level: "NATIONAL",
+    description: "Awarded by National Federation for producing 5 gold medalists in the senior division.",
+  },
+  {
+    id: "ach-2",
+    title: "Commonwealth Karate Championship - Silver Medal",
+    category: "COMPETITION",
+    role: "ATHLETE",
+    year: 2018,
+    level: "INTERNATIONAL",
+    description: "Represented India in the -67kg Male Kumite division.",
+  },
+  {
+    id: "ach-3",
+    title: "State Martial Arts Excellence Trophy",
+    category: "FEDERATION_HONOR",
+    role: "COACH",
+    year: 2023,
+    level: "STATE",
+    description: "Recognized for 10 consecutive years of dedicated youth sports mentorship.",
+  },
+];
+
+export const SAMPLE_NOTABLE_ATHLETES: NotableAthlete[] = [
+  {
+    id: "ath-1",
+    name: "Aarav Mehta",
+    sport: "Karate (Cadet -52kg)",
+    currentTitle: "National Silver Medalist 2025",
+    coachedSince: "2022",
+  },
+  {
+    id: "ath-2",
+    name: "Ananya Iyer",
+    sport: "Karate (Junior Kata)",
+    currentTitle: "State Gold Medalist & Black Belt Candidate",
+    coachedSince: "2020",
+  },
+  {
+    id: "ath-3",
+    name: "Vikram Singhania",
+    sport: "Karate (Senior Kumite)",
+    currentTitle: "All-India University Games Quarterfinalist",
+    coachedSince: "2018",
+  },
+];
+
+export const SAMPLE_COACH_OFFERINGS: CoachOffering[] = [
+  {
+    id: "off-1",
+    name: "1-on-1 High Performance Biomechanical Coaching",
+    type: "PRIVATE_1ON1",
+    ageGroup: "12+ Years",
+    skillLevel: "ADVANCED",
+    priceAmount: 1800,
+    currency: "INR",
+    durationMinutes: 60,
+    description: "Individual technical video review, personalized tactical sparring, and stance correction.",
+  },
+  {
+    id: "off-2",
+    name: "Cadet & Youth Competition Sparring Squad",
+    type: "ELITE_SQUAD",
+    ageGroup: "10 - 16 Years",
+    skillLevel: "INTERMEDIATE",
+    priceAmount: 800,
+    currency: "INR",
+    durationMinutes: 90,
+    description: "Small group tactical bout simulation using electronic scoring clocks.",
+  },
+  {
+    id: "off-3",
+    name: "Foundation & Stance Mastery Clinic",
+    type: "GROUP_CLINIC",
+    ageGroup: "All Ages",
+    skillLevel: "BEGINNER",
+    priceAmount: 500,
+    currency: "INR",
+    durationMinutes: 60,
+    description: "Open clinic focused on balance, power generation, and fundamental self-defense.",
+  },
+];
+
+export const SAMPLE_COACH_QUALIFICATIONS: CoachQualification[] = [
+  {
+    id: "qual-1",
+    name: "World Karate Federation (WKF) Certified Coach - Kumite Level 2",
+    issuer: "World Karate Federation",
+    yearAwarded: 2021,
+    licenseNumber: "WKF-COACH-IND-8821",
+    verified: true,
+  },
+  {
+    id: "qual-2",
+    name: "NIS Certificate in Sports Coaching (Martial Arts)",
+    issuer: "Netaji Subhas National Institute of Sports",
+    yearAwarded: 2017,
+    licenseNumber: "NIS-MA-2017-049",
+    verified: true,
+  },
+  {
+    id: "qual-3",
+    name: "Black Belt 4th Dan (Yondan)",
+    issuer: "Japan Karate Association / All India Karate Federation",
+    yearAwarded: 2022,
+    licenseNumber: "AIKF-DAN-4019",
+    verified: true,
+  },
+];

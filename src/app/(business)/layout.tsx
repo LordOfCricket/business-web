@@ -17,8 +17,9 @@ export const dynamic = "force-dynamic";
 function groupNav(items: Array<{ href: string; label: string }>): SideNavGroup[] {
   const pick = (test: (href: string) => boolean) => items.filter((i) => test(i.href));
   const groups: SideNavGroup[] = [
-    { items: pick((h) => h === "/dashboard") },
-    { title: "Venues", items: pick((h) => h === "/venues" || h === "/bookings") },
+    { items: pick((h) => h === "/dashboard" || h === "/workspace") },
+    { title: "Academy", items: pick((h) => h.includes("/academy")) },
+    { title: "Venues", items: pick((h) => h === "/venues" || h === "/bookings" || h.includes("/venue")) },
     { title: "Shop", items: pick((h) => h.startsWith("/shop")) },
     {
       title: "Competitions",
@@ -38,6 +39,8 @@ export default async function BusinessLayout({ children }: { children: ReactNode
   const karate = org.status === "VERIFIED" && org.sports.includes("karate") && isLaunched("karate");
   const nav = [
     { href: "/dashboard", label: "Overview", show: true },
+    { href: `/workspace/academy/${org.id}`, label: "Academy workspace", show: true },
+    { href: "/workspace", label: "Switch workspace", show: true },
     { href: "/venues", label: "Venues & facilities", show: capabilities.includes("VENUE_OPERATOR") },
     { href: "/bookings", label: "Bookings", show: capabilities.includes("VENUE_OPERATOR") },
     { href: "/shop", label: "Shop", show: capabilities.includes("SELLER") },

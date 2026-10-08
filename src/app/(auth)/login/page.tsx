@@ -13,7 +13,7 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string; passwordChanged?: string }>;
 }) {
   const { next, passwordChanged } = await searchParams;
-  const destination = safeNextPath(next);
+  const destination = safeNextPath(next, "/workspace");
   if (await getSession()) redirect(destination);
   return (
     <AuthCard

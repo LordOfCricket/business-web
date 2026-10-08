@@ -1,52 +1,49 @@
-import Link from "next/link";
-import { Card } from "@/components/ui";
-import { APP } from "@/constants/app";
+import type { Metadata } from "next";
+import { HeroSection } from "@/components/landing/HeroSection";
+import { WhatCanYouManageSection } from "@/components/landing/WhatCanYouManageSection";
+import { BusinessTypesSection } from "@/components/landing/BusinessTypesSection";
+import { SportsEcosystemSection } from "@/components/landing/SportsEcosystemSection";
+import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { FeaturesSection } from "@/components/landing/FeaturesSection";
+import { ShopMarketplaceSection } from "@/components/landing/ShopMarketplaceSection";
+import { ForProfessionalsSection } from "@/components/landing/ForProfessionalsSection";
+import { FinalCtaSection } from "@/components/landing/FinalCtaSection";
 
-const BUSINESS_TYPES = [
-  "Sports Academy",
-  "Ground / Venue Owner",
-  "Sports Center",
-  "Training Center",
-  "Club",
-  "Coach & Professionals",
-];
+export const metadata: Metadata = {
+  title: "LordOfSportz Business · Professional Operating Platform for Sports Organizations",
+  description:
+    "Manage sports academies, venues, pitches, coaches, staff, bookings, tournaments, and your official presence across the LordOfSportz sports ecosystem.",
+};
 
 export default function BusinessHomePage() {
   return (
-    <div className="flex flex-col gap-10">
-      <section aria-labelledby="hero-title" className="flex flex-col gap-4 pt-8">
-        <h1 id="hero-title" className="text-4xl font-bold tracking-tight">
-          {APP.tagline}
-        </h1>
-        <p className="max-w-2xl text-lg text-muted">{APP.description}</p>
-        <div>
-          <Link
-            href="/onboarding/business"
-            className="inline-flex rounded-full bg-ink px-5 py-3 text-sm font-medium text-paper hover:bg-brand-900"
-          >
-            Register your business
-          </Link>
-          <Link
-            href="/onboarding/professional"
-            className="ml-3 inline-flex rounded-full border border-ink/15 bg-surface px-5 py-3 text-sm font-medium hover:border-ink/40"
-          >
-            I am a coach or official
-          </Link>
-        </div>
-      </section>
+    <div className="flex flex-col">
+      {/* 1. Hero Section */}
+      <HeroSection />
 
-      <section aria-labelledby="types-title" className="flex flex-col gap-4">
-        <h2 id="types-title" className="text-2xl font-semibold">
-          Built for every kind of sports business
-        </h2>
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {BUSINESS_TYPES.map((type) => (
-            <li key={type}>
-              <Card className="font-medium">{type}</Card>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* 2. What Can You Manage? */}
+      <WhatCanYouManageSection />
+
+      {/* 3. Business Types (8 Interactive Cards) */}
+      <BusinessTypesSection />
+
+      {/* 4. Sports Ecosystem */}
+      <SportsEcosystemSection />
+
+      {/* 5. How It Works */}
+      <HowItWorksSection />
+
+      {/* 6. Deep Platform Features */}
+      <FeaturesSection />
+
+      {/* 7. Official LordOfSportz Shop */}
+      <ShopMarketplaceSection />
+
+      {/* 8. Built for Sports Professionals */}
+      <ForProfessionalsSection />
+
+      {/* 9. Final Call to Action */}
+      <FinalCtaSection />
     </div>
   );
 }

@@ -10,6 +10,7 @@ export const APP = {
  * VENUE_OPERATOR → venues/facilities/bookings, SELLER → products/inventory/orders, ACADEMY/PROFESSIONAL_SERVICES → staff.
  */
 export const NAV_LINKS = [
+  { href: "/workspace", label: "Workspaces" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/venues", label: "Venues" },
   { href: "/staff", label: "Staff" },

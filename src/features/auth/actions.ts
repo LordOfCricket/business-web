@@ -61,7 +61,7 @@ export async function loginAction(_: FormState, form: FormData): Promise<FormSta
     .object({ email, password: z.string().min(1, "Enter your password.").max(128) })
     .safeParse({ email: form.get("email"), password: form.get("password") });
   if (!parsed.success) return { ...fieldErrors(parsed.error), values };
-  const next = safeNextPath(form.get("next")?.toString());
+  const next = safeNextPath(form.get("next")?.toString(), "/workspace");
   let challenged = false;
   try {
     const { data } = await gatewayFetch<LoginResult>("/auth/login", { method: "POST", body: parsed.data });
